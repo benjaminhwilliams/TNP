@@ -233,9 +233,21 @@ def run_dssp(structurefile, type=''):
     @return: A dictionary containing H and L as keys and a list of residue identifiers and dictionaries containing the properties of each residue.
     """
 
+    import warnings
+
     from Bio.PDB.DSSP import DSSP
     from Bio.PDB.PDBParser import PDBParser
-    from Bio.PDB.Polypeptide import three_to_one
+    from Bio.SeqUtils import seq1
+
+    def dssp(model, structurefile):
+        # DSSP 4 tries to read its input as mmCIF before falling back to PDB,
+        # and reports the failed attempt on stderr, which Biopython raises as a
+        # warning.
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message=".*does not seem to be an mmCIF file"
+            )
+            return DSSP(model, structurefile)
 
     if type == 'tcr':
         dssp_properties = {"B":[], "A":[]}
@@ -244,7 +256,7 @@ def run_dssp(structurefile, type=''):
 
         # Run DSSP on the model to annotate residues
         try:
-            _ = DSSP( s[0], structurefile) 
+            _ = dssp( s[0], structurefile) 
         except OSError: 
             # dssp is not installed so cannot be run.
             return {"B":[], "A":[]}, None, "DSSP is not in the path"
@@ -257,7 +269,7 @@ def run_dssp(structurefile, type=''):
 
         # Run DSSP on the model to annotate residues
         try:
-            _ = DSSP( s[0], structurefile) 
+            _ = dssp( s[0], structurefile) 
         except OSError: 
             # dssp is not installed so cannot be run.
             return {"H":[], "L":[]}, None, "DSSP is not in the path"
@@ -284,7 +296,7 @@ def run_dssp(structurefile, type=''):
                 if r.id[0] !="W":
                     dssp_properties[chain.id].append( [ r.id[1:], r.resname, r.xtra ] )
                     try:
-                        print(",".join( [ chain.id, str(r.id[1]), r.id[2], three_to_one(r.get_resname()), "%.2f"%r.xtra['EXP_DSSP_ASA'], "%.2f"%r.xtra['EXP_DSSP_RASA'],
+                        print(",".join( [ chain.id, str(r.id[1]), r.id[2], seq1(r.get_resname()), "%.2f"%r.xtra['EXP_DSSP_ASA'], "%.2f"%r.xtra['EXP_DSSP_RASA'],
                                 r.xtra['SS_DSSP'],"%.2f"%r.xtra['PHI_DSSP'],"%.2f"%r.xtra['PSI_DSSP'] ]), file=fout)
                     except KeyError:
                         print(",".join([chain.id, str(r.id[1]),r.id[2],"-","-","-","-","-","-"]), file=fout)
