@@ -49,17 +49,19 @@ The code and data in this package is based on the <a href="https://doi.org/10.11
 
 ## Installation
 
-In the package directory:
+TNP depends on [ANARCI](https://github.com/oxpig/ANARCI) and HMMER from
+[Bioconda](https://bioconda.github.io/), and on
+[NanoBodyBuilder2](https://github.com/oxpig/ImmuneBuilder) and DSSP.  Do not
+install the `anarci` package from PyPI, which is not an official release.
 
-`pip install .`
+To set up a development environment with Conda (or Mamba/Micromamba), in the
+package directory:
 
-**Requirements**
-
-- python 3.10
-- [ANARCI](https://github.com/oxpig/ANARCI)
-- [NanoBodyBuilder2](https://github.com/oxpig/ImmuneBuilder)
-- [DSSP](https://anaconda.org/salilab/dssp)
-- biopython 1.77
+```bash
+conda env create -f environment.yml
+conda activate tnp
+pip install --no-deps --editable .
+```
 
 
 ## Usage
