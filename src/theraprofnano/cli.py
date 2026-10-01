@@ -61,7 +61,12 @@ TNP -s QVKLQESGAELARPGASVKLSCKASGYTFTNYWMQWVKQRPGQGLDWIGAIYPGDGNTRYTHKFKGKATLTAD
 # UPDATE FLAG VALUES HERE    
 # Function to assign a flag colour based on the value of a TNP metric
 def assign_flag(metric, value):
-    
+
+    # A metric that could not be calculated (e.g. compactness, if anchor
+    # residues are missing) would otherwise fail every comparison below.
+    if np.isnan(value):
+        return "red"
+
     # Total CDR Length (L)
     if metric == "L":
         if   value <  20 or  value >  39:
@@ -274,7 +279,7 @@ def profile_sequence(heavy_name, heavy_sequence, h_scale, output, web, verbose=F
                 if verbose: 
                     print(linedivide + "TNP was able to calculate a CDR3 compactness score for your model structure.\n\n")
             else:
-                cdr3_compactness = np.nan()
+                cdr3_compactness = np.nan
                 fo.write("TNP was not able to calculate a CDR3 compactness score for your model structure.\n")
                 if verbose: 
                     print(linedivide + "TNP was not able to calculate a CDR3 compactness score for your model structure.\n\n")
