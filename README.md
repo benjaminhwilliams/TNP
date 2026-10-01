@@ -49,13 +49,45 @@ The code and data in this package is based on the <a href="https://doi.org/10.11
 
 ## Installation
 
+TNP is distributed through [Bioconda](https://bioconda.github.io/):
+
+```bash
+conda install -c conda-forge -c bioconda tnp
+```
+
 TNP depends on [ANARCI](https://github.com/oxpig/ANARCI) and HMMER from
-[Bioconda](https://bioconda.github.io/), and on
-[NanoBodyBuilder2](https://github.com/oxpig/ImmuneBuilder) and DSSP.  Do not
-install the `anarci` package from PyPI, which is not an official release.
+Bioconda, and on [NanoBodyBuilder2](https://github.com/oxpig/ImmuneBuilder),
+DSSP and FreeSASA.  Do not install the `anarci` package from PyPI, which is not
+an official release.
+
+NanoBodyBuilder2 downloads its trained weights on first use.  Conda installs a
+CUDA-enabled PyTorch where it detects a GPU, and a CPU-only one otherwise.
+
+## Usage
+
+For a single sequence:
+
+```bash
+TNP --name my_sequence --output my_sequence_output --seq [sequence]
+```
+
+For multiple sequences in a FASTA file:
+
+```bash
+TNP --output /path/to/output/directory --file /path/to/sequences.fasta
+```
+
+TNP models each sequence with NanoBodyBuilder2, then writes its results to the
+output directory: a log and a JSON summary of the metrics and their flags, and
+the models in `Final_Models/`.  With `--web`, it also writes the data for the
+plots shown by the web application.
+
+For more options and information, run `TNP --help`.
+
+## Development
 
 To set up a development environment with Conda (or Mamba/Micromamba), in the
-package directory:
+repository:
 
 ```bash
 conda env create -f environment.yml
@@ -63,25 +95,23 @@ conda activate tnp
 pip install --no-deps --editable .
 ```
 
+Run the tests with `pytest`.  The slow end-to-end tests, which model a nanobody
+with NanoBodyBuilder2, are skipped unless you run `pytest --runslow`.  Lint with
+`ruff check`, and install the pre-commit hooks with `uvx pre-commit install`.
 
-## Usage
+`scripts/compare_sasa.py` compares the surface patch metrics on the clinical-
+stage models in `paper/paper_data` with the published values, or with another
+version of TNP.
 
-* For a single sequence
+### Releasing
 
-`TNP --name my_sequence --output my_sequence_output --seq [sequence]`
+Bump the version, which commits the change and makes a signed tag, then push
+it:
 
-* For multiple sequences in a FASTA file
+```bash
+uvx bump-my-version bump patch  # Or minor, or major.
+git push --follow-tags
+```
 
-`TNP --name my_fasta_file --output /path/to/output/directory --file /path/to/my/fasta/file/filename.fasta`
-
-<!-- * For a folder with already available PDB models: 
-  
-  - These structures should NOT contain hydrogens
-  - SAbDab needs to be installed
-
-`TNP --name my_models --output /path/to/output/directory --models /path/to/my/models` -->
-
-
-For more options and information, run `TNP --help`.
-
-
+For each version tag, GitHub Actions runs the tests and makes a GitHub release
+with a signed source distribution.  The Bioconda bot then updates the recipe.
